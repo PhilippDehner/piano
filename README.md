@@ -10,7 +10,7 @@ Einfache Klavier-App als PWA für Android-Handys. Installierbar, offline nutzbar
 - Klänge: Klavier (Salamander Grand Piano) und Orgel (geloopte Samples, stoppt sofort beim Loslassen)
 - Sustain-Pedal als Umschalter
 - Akkordmodus: Grundton aus einer Oktave, Typ Dur, Moll, vermindert, übermäßig (Grundstellung). Ein Typ ist immer gewählt (Start: Dur); ein Typwechsel spielt den letzten Akkord erneut. Die Pfeile wechseln hier die Oktave.
-- Vollbild, Drehsperre (nur im Vollbild), App schließen (je nach Gerät)
+- Vollbild
 - Einstellungen: Anzahl der Tasten, Beschriftung (keine / nur C / alle), Vibration, Version, Release Notes
 - Einstellungen und Position werden lokal gespeichert; Updates werden automatisch übernommen, danach erscheinen die Release Notes
 
