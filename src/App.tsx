@@ -7,15 +7,12 @@ import RepeatButton from './components/RepeatButton';
 import Settings from './components/Settings';
 import { APP_NAME } from './config';
 import {
-  closeApp,
   DESKTOP_QUERY,
   enterFullscreen,
   exitFullscreen,
   isDesktop,
   isFullscreen,
   keyboardLayout,
-  lockOrientation,
-  unlockOrientation,
   vibrate,
 } from './device';
 import {
@@ -53,7 +50,6 @@ export default function App() {
   const [pressed, setPressed] = useState<ReadonlySet<number>>(new Set());
   const [sustain, setSustainState] = useState(false);
   const [fullscreen, setFullscreen] = useState(isFullscreen);
-  const [locked, setLocked] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
@@ -103,11 +99,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const on = () => {
-      const fs = isFullscreen();
-      setFullscreen(fs);
-      if (!fs) setLocked(false); // the lock ends with fullscreen
-    };
+    const on = () => setFullscreen(isFullscreen());
     document.addEventListener('fullscreenchange', on);
     return () => document.removeEventListener('fullscreenchange', on);
   }, []);
@@ -212,21 +204,6 @@ export default function App() {
     else if (!(await enterFullscreen())) setToast('Vollbild wird nicht unterstützt');
   };
 
-  const toggleLock = async () => {
-    if (locked) {
-      unlockOrientation();
-      setLocked(false);
-    } else if (await lockOrientation()) {
-      setLocked(true);
-    } else {
-      setToast('Drehsperre wird auf diesem Gerät nicht unterstützt');
-    }
-  };
-
-  const close = async () => {
-    if (!(await closeApp())) setToast('Die App lässt sich hier nicht schließen');
-  };
-
   const instrumentLabel = state.instrument === 'piano' ? 'Klavier' : 'Orgel';
   /** Desktop outside fullscreen: the piano as a centered card with title and help line. */
   const framed = desktop && !fullscreen;
@@ -306,11 +283,6 @@ export default function App() {
       {framed && <h1 className="app-title">{APP_NAME}</h1>}
       <div className="card">
         <header className="bar">
-          {!desktop && (
-            <button className="icon-button" aria-label="App schließen" title="App schließen" onClick={close}>
-              <Icon name="close" />
-            </button>
-          )}
           <button
             className={`icon-button ${fullscreen ? 'active' : ''}`}
             aria-label="Vollbild"
@@ -320,17 +292,6 @@ export default function App() {
           >
             <Icon name={fullscreen ? 'fullscreenExit' : 'fullscreen'} />
           </button>
-          {!desktop && (
-            <button
-              className={`icon-button ${locked ? 'active' : ''}`}
-              aria-label="Drehsperre"
-              aria-pressed={locked}
-              title="Drehsperre"
-              onClick={toggleLock}
-            >
-              <Icon name={locked ? 'lock' : 'unlock'} />
-            </button>
-          )}
           <button
             className={`text-button ${sustain ? 'active' : ''}`}
             aria-pressed={sustain}
