@@ -3,8 +3,6 @@ const paths = {
   close: 'M6 6l12 12M18 6L6 18',
   fullscreen: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
   fullscreenExit: 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5',
-  lock: 'M7 11V8a5 5 0 0110 0v3M5 11h14v9H5z',
-  unlock: 'M7 11V8a5 5 0 019.6-2M5 11h14v9H5z',
   left: 'M15 5l-7 7 7 7',
   right: 'M9 5l7 7-7 7',
   settings:
