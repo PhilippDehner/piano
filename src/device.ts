@@ -21,9 +21,12 @@ export async function exitFullscreen() {
   }
 }
 
+/** Many Android vibration motors do not respond to pulses shorter than ~20 ms. */
+const VIBRATE_MS = 30;
+
 export function vibrate() {
   try {
-    navigator.vibrate?.(12);
+    navigator.vibrate?.(VIBRATE_MS);
   } catch {
     // Ignore
   }
