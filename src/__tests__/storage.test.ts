@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_STATE, portraitWhiteKeys, sanitize, WHITE_KEYS_MAX, WHITE_KEYS_MIN } from '../storage';
+import { DEFAULT_STATE, defaultState, portraitWhiteKeys, sanitize, WHITE_KEYS_MAX, WHITE_KEYS_MIN } from '../storage';
 
 describe('storage', () => {
   it('uses defaults for missing data', () => {
@@ -32,6 +32,13 @@ describe('storage', () => {
     expect(s.mode).toBe('chords');
     expect(s.chordType).toBe('major');
     expect(s.chordOctave).toBe(3);
+  });
+
+  it('shows three octaves from c on desktop', () => {
+    const d = defaultState(true);
+    expect(d.whiteKeys).toBe(21);
+    expect(d.leftWhite).toBe(DEFAULT_STATE.leftWhite - 7);
+    expect(defaultState(false)).toEqual(DEFAULT_STATE);
   });
 
   it('shows about half the keys in portrait', () => {

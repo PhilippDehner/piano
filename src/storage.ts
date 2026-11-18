@@ -17,6 +17,8 @@ export interface AppState {
   chordType: ChordType;
   /** Octave of the chord-mode keyboard (4 = c¹ to h¹). */
   chordOctave: number;
+  /** Show the computer-keyboard mapping on the keys (desktop only). */
+  keyHints: boolean;
 }
 
 export const WHITE_KEYS_MIN = 7;
@@ -31,7 +33,18 @@ export const DEFAULT_STATE: AppState = {
   mode: 'piano',
   chordType: 'major',
   chordOctave: 4,
+  keyHints: true,
 };
+
+/** Defaults on desktop browsers: three octaves from c. */
+export const DESKTOP_DEFAULTS: Partial<AppState> = {
+  whiteKeys: 21,
+  leftWhite: MIDDLE_C_WHITE_INDEX - 7,
+};
+
+export function defaultState(desktop: boolean): AppState {
+  return { ...DEFAULT_STATE, ...(desktop ? DESKTOP_DEFAULTS : {}) };
+}
 
 const KEY = 'piano:state';
 
@@ -60,15 +73,17 @@ export function sanitize(raw: unknown): AppState {
     mode: r.mode === 'piano' || r.mode === 'chords' ? r.mode : d.mode,
     chordType: isChordType(r.chordType) ? r.chordType : d.chordType,
     chordOctave: clampChordOctave(num(r.chordOctave, d.chordOctave)),
+    keyHints: typeof r.keyHints === 'boolean' ? r.keyHints : d.keyHints,
   };
 }
 
-export function loadState(): AppState {
+/** Stored state, or the defaults for this kind of device on first use. */
+export function loadState(desktop = false): AppState {
   try {
     const s = localStorage.getItem(KEY);
-    return sanitize(s ? JSON.parse(s) : null);
+    return s ? sanitize(JSON.parse(s)) : defaultState(desktop);
   } catch {
-    return { ...DEFAULT_STATE };
+    return defaultState(desktop);
   }
 }
 
