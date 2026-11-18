@@ -94,7 +94,7 @@ export default function Settings({ state, desktop, onChange, onClose }: Props) {
               </label>
               <ul className="muted small shortcuts">
                 <li>
-                  <kbd>A</kbd> bis <kbd>Ä</kbd>: weiße Tasten ab dem ersten c, Reihe darüber (<kbd>W</kbd> <kbd>E</kbd>{' '}
+                  <kbd>A</kbd> bis <kbd>Ä</kbd>: weiße Tasten ab der linkesten Taste, Reihe darüber (<kbd>W</kbd> <kbd>E</kbd>{' '}
                   <kbd>T</kbd> …): schwarze Tasten
                 </li>
                 <li>

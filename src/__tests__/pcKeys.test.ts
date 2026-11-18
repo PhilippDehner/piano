@@ -8,9 +8,21 @@ describe('pc keyboard', () => {
     expect(pcNote('KeyW', 60)).toBe(61);
     expect(pcNote('KeyF', 60)).toBe(65);
     expect(pcNote('KeyY', 60)).toBe(68);
+    expect(pcNote('KeyR', 60)).toBeNull(); // between e and f
     expect(pcNote('KeyK', 60)).toBe(72);
     expect(pcNote('Quote', 60)).toBe(77);
     expect(pcNote('KeyQ', 60)).toBeNull();
+  });
+
+  it('follows the leftmost key when it is not a c', () => {
+    expect(pcNote('KeyA', 62)).toBe(62); // d
+    expect(pcNote('KeyW', 62)).toBe(63); // es
+    expect(pcNote('KeyE', 62)).toBeNull(); // between e and f
+    expect(pcNote('KeyD', 62)).toBe(65); // f
+    expect(pcNote('KeyR', 62)).toBe(66); // fis
+    expect(pcNote('KeyA', 64)).toBe(64); // e
+    expect(pcNote('KeyW', 64)).toBeNull();
+    expect(pcNote('KeyS', 64)).toBe(65);
   });
 
   it('respects the limit and the top of the piano', () => {
@@ -20,10 +32,10 @@ describe('pc keyboard', () => {
     expect(pcNote('KeyW', 108)).toBeNull();
   });
 
-  it('starts at the first c of the visible keys', () => {
+  it('starts at the leftmost visible key', () => {
     expect(pcBase(windowKeys(23, 14))).toBe(60); // c¹ is white key 23
-    expect(pcBase(windowKeys(22, 14))).toBe(60); // window starts at h
-    expect(pcBase([64, 65, 66, 67])).toBe(64); // no c: first key
+    expect(pcBase(windowKeys(22, 14))).toBe(59); // window starts at h
+    expect(pcBase([64, 65, 66, 67])).toBe(64);
   });
 
   it('shows German key caps without a layout and browser caps with one', () => {

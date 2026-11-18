@@ -13,7 +13,7 @@ Einfache Klavier-App als PWA für Android-Handys und Desktop-Browser. Installier
 - Vollbild
 - Einstellungen: Anzahl der Tasten, Beschriftung (keine / nur C / alle), Vibration, Version, Release Notes
 - Desktop-Browser (Maus/Trackpad, erkannt über `(hover: hover) and (pointer: fine)`):
-  - PC-Tastatur nach physischer Position: `A`–`Ä` (+ `#`) weiße Tasten ab dem ersten sichtbaren c, `W E T Z U O P +` schwarze; im Akkordmodus eine Oktave als Grundtöne
+  - PC-Tastatur nach physischer Position: `A`–`Ä` (+ `#`) weiße Tasten ab der linkesten sichtbaren Taste, die Reihe darüber (`W E R T Z U I O P Ü +`) die schwarzen dazwischen; im Akkordmodus eine Oktave als Grundtöne
   - `←`/`→` und Mausrad verschieben, Leertaste schaltet das Pedal, `1`–`4` wählen den Akkordtyp
   - Tastenbelegung auf den Tasten (abschaltbar), Hover-Effekte, Standard drei Oktaven ab c
   - Im Fenster: Klavier als zentrierte Karte mit Titel und Hilfezeile, Tastenhöhe nach echten Proportionen; im Vollbild wie auf dem Handy
