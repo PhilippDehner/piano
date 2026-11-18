@@ -16,6 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'Desktop-Browser: Spielen mit der PC-Tastatur (A bis Ä weiße Tasten, Reihe darüber schwarze), Belegung wird auf den Tasten angezeigt.',
       'Desktop-Browser: Pfeiltasten und Mausrad verschieben die Klaviatur, Leertaste schaltet das Pedal, 1 bis 4 wählen den Akkordtyp.',
+      'Desktop-Browser: Klavier als zentrierte Karte mit Hilfezeile, Einstellungen als Dialog.',
       'Desktop-Browser: drei Oktaven als Standard; Drehsperre, App schließen und Vibration werden ausgeblendet.',
     ],
   },

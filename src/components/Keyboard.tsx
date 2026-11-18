@@ -79,7 +79,7 @@ export default function Keyboard({ keys, labels, pressed, marks, hints, onPress,
         ].join(' ');
         let style: React.CSSProperties;
         if (white) {
-          style = { width: `${w}%` };
+          style = { width: `calc(${w}% + 1px)` }; // +1px offsets the overlapping border (margin-right: -1px)
         } else {
           const whitesBefore = whites.filter((m) => m < midi).length;
           style = { left: `${(whitesBefore - BLACK_WIDTH / 2) * w}%`, width: `${w * BLACK_WIDTH}%` };

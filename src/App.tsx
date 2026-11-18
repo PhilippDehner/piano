@@ -5,6 +5,7 @@ import Icon from './components/icons';
 import Keyboard, { KeyMark } from './components/Keyboard';
 import RepeatButton from './components/RepeatButton';
 import Settings from './components/Settings';
+import { APP_NAME } from './config';
 import {
   closeApp,
   DESKTOP_QUERY,
@@ -26,7 +27,7 @@ import {
   clampChordOctave,
   octaveKeys,
 } from './music/chords';
-import { clampLeftWhite, maxLeftWhite, rangeLabel, windowKeys } from './music/notes';
+import { clampLeftWhite, isWhite, maxLeftWhite, rangeLabel, windowKeys } from './music/notes';
 import { chordTypeIndex, pcBase, pcHints, pcNote } from './music/pcKeys';
 import { AppState, loadState, portraitWhiteKeys, saveState } from './storage';
 
@@ -227,6 +228,9 @@ export default function App() {
   };
 
   const instrumentLabel = state.instrument === 'piano' ? 'Klavier' : 'Orgel';
+  /** Desktop outside fullscreen: the piano as a centered card with title and help line. */
+  const framed = desktop && !fullscreen;
+  const whitesShown = keys.filter(isWhite).length;
 
   /* ---------- Computer keyboard and mouse wheel ---------- */
 
@@ -295,110 +299,137 @@ export default function App() {
   };
 
   return (
-    <div className={`app ${portrait ? 'portrait' : 'landscape'} ${desktop ? 'desktop' : ''}`}>
-      <header className="bar">
-        {!desktop && (
-          <button className="icon-button" aria-label="App schließen" title="App schließen" onClick={close}>
-            <Icon name="close" />
-          </button>
-        )}
-        <button
-          className={`icon-button ${fullscreen ? 'active' : ''}`}
-          aria-label="Vollbild"
-          aria-pressed={fullscreen}
-          title="Vollbild"
-          onClick={toggleFullscreen}
-        >
-          <Icon name={fullscreen ? 'fullscreenExit' : 'fullscreen'} />
-        </button>
-        {!desktop && (
+    <div
+      className={`app ${portrait ? 'portrait' : 'landscape'} ${desktop ? 'desktop' : ''} ${framed ? 'framed' : ''}`}
+      style={{ '--whites': whitesShown } as React.CSSProperties}
+    >
+      {framed && <h1 className="app-title">{APP_NAME}</h1>}
+      <div className="card">
+        <header className="bar">
+          {!desktop && (
+            <button className="icon-button" aria-label="App schließen" title="App schließen" onClick={close}>
+              <Icon name="close" />
+            </button>
+          )}
           <button
-            className={`icon-button ${locked ? 'active' : ''}`}
-            aria-label="Drehsperre"
-            aria-pressed={locked}
-            title="Drehsperre"
-            onClick={toggleLock}
+            className={`icon-button ${fullscreen ? 'active' : ''}`}
+            aria-label="Vollbild"
+            aria-pressed={fullscreen}
+            title="Vollbild"
+            onClick={toggleFullscreen}
           >
-            <Icon name={locked ? 'lock' : 'unlock'} />
+            <Icon name={fullscreen ? 'fullscreenExit' : 'fullscreen'} />
           </button>
-        )}
-        <button
-          className={`text-button ${sustain ? 'active' : ''}`}
-          aria-pressed={sustain}
-          title={desktop ? 'Sustain-Pedal (Leertaste)' : 'Sustain-Pedal'}
-          onClick={toggleSustain}
-        >
-          Pedal
-        </button>
+          {!desktop && (
+            <button
+              className={`icon-button ${locked ? 'active' : ''}`}
+              aria-label="Drehsperre"
+              aria-pressed={locked}
+              title="Drehsperre"
+              onClick={toggleLock}
+            >
+              <Icon name={locked ? 'lock' : 'unlock'} />
+            </button>
+          )}
+          <button
+            className={`text-button ${sustain ? 'active' : ''}`}
+            aria-pressed={sustain}
+            title={desktop ? 'Sustain-Pedal (Leertaste)' : 'Sustain-Pedal'}
+            onClick={toggleSustain}
+          >
+            Pedal
+          </button>
 
-        <div className="range">
-          <RepeatButton label="Nach links" onStep={() => shift(-1)} disabled={!canLeft}>
-            <Icon name="left" />
-          </RepeatButton>
-          <span className="range-label" aria-live="polite">
-            {rangeLabel(keys[0], keys[keys.length - 1])}
-          </span>
-          <RepeatButton label="Nach rechts" onStep={() => shift(1)} disabled={!canRight}>
-            <Icon name="right" />
-          </RepeatButton>
-        </div>
-
-        <button
-          className="text-button"
-          title="Instrument wechseln"
-          aria-label={`Instrument: ${instrumentLabel}`}
-          onClick={() => update({ instrument: state.instrument === 'piano' ? 'organ' : 'piano' })}
-        >
-          {instrumentLabel}
-        </button>
-        <button
-          className={`text-button ${chordMode ? 'active' : ''}`}
-          aria-pressed={chordMode}
-          title="Akkordmodus"
-          onClick={() => update({ mode: chordMode ? 'piano' : 'chords' })}
-        >
-          Akkorde
-        </button>
-        <button className="icon-button settings-button" aria-label="Einstellungen" title="Einstellungen" onClick={() => setSettingsOpen(true)}>
-          <Icon name="settings" />
-        </button>
-      </header>
-
-      <main className="stage" onWheel={onWheel}>
-        {chordMode && (
-          <div className="chord-types" role="radiogroup" aria-label="Akkordtyp">
-            {CHORD_TYPES.map((c, i) => (
-              <button
-                key={c.type}
-                role="radio"
-                aria-checked={state.chordType === c.type}
-                className={state.chordType === c.type ? 'active' : ''}
-                title={desktop ? `Taste ${i + 1}` : undefined}
-                onClick={() => chooseChordType(c.type)}
-              >
-                {c.label}
-              </button>
-            ))}
+          <div className="range">
+            <RepeatButton label="Nach links" onStep={() => shift(-1)} disabled={!canLeft}>
+              <Icon name="left" />
+            </RepeatButton>
+            <span className="range-label" aria-live="polite">
+              {rangeLabel(keys[0], keys[keys.length - 1])}
+            </span>
+            <RepeatButton label="Nach rechts" onStep={() => shift(1)} disabled={!canRight}>
+              <Icon name="right" />
+            </RepeatButton>
           </div>
-        )}
-        <Keyboard
-          keys={keys}
-          labels={state.labels}
-          pressed={pressed}
-          marks={marks}
-          hints={hints}
-          onPress={handlePress}
-          onRelease={handleRelease}
-        />
-        {loading && <div className="loading">Klänge werden geladen …</div>}
-      </main>
+
+          <button
+            className="text-button"
+            title="Instrument wechseln"
+            aria-label={`Instrument: ${instrumentLabel}`}
+            onClick={() => update({ instrument: state.instrument === 'piano' ? 'organ' : 'piano' })}
+          >
+            {instrumentLabel}
+          </button>
+          <button
+            className={`text-button ${chordMode ? 'active' : ''}`}
+            aria-pressed={chordMode}
+            title="Akkordmodus"
+            onClick={() => update({ mode: chordMode ? 'piano' : 'chords' })}
+          >
+            Akkorde
+          </button>
+          <button
+            className="icon-button settings-button"
+            aria-label="Einstellungen"
+            title="Einstellungen"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <Icon name="settings" />
+          </button>
+        </header>
+
+        <main className="stage" onWheel={onWheel}>
+          {chordMode && (
+            <div className="chord-types" role="radiogroup" aria-label="Akkordtyp">
+              {CHORD_TYPES.map((c, i) => (
+                <button
+                  key={c.type}
+                  role="radio"
+                  aria-checked={state.chordType === c.type}
+                  className={state.chordType === c.type ? 'active' : ''}
+                  title={desktop ? `Taste ${i + 1}` : undefined}
+                  onClick={() => chooseChordType(c.type)}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <Keyboard
+            keys={keys}
+            labels={state.labels}
+            pressed={pressed}
+            marks={marks}
+            hints={hints}
+            onPress={handlePress}
+            onRelease={handleRelease}
+          />
+          {loading && <div className="loading">Klänge werden geladen …</div>}
+        </main>
+      </div>
+      {framed && (
+        <p className="help-line">
+          {chordMode ? (
+            <>
+              <kbd>A</kbd>–<kbd>J</kbd> Grundton · <kbd>1</kbd>–<kbd>4</kbd> Akkordtyp
+            </>
+          ) : (
+            <>
+              <kbd>A</kbd>–<kbd>Ä</kbd> weiße Tasten · <kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> … schwarze Tasten
+            </>
+          )}{' '}
+          · <kbd>←</kbd> <kbd>→</kbd> / Mausrad verschieben · <kbd>Leertaste</kbd> Pedal
+        </p>
+      )}
 
       {toast && (
         <div className="toast" role="status">
           {toast}
         </div>
       )}
-      {settingsOpen && <Settings state={state} desktop={desktop} onChange={update} onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && (
+        <Settings state={state} desktop={desktop} onChange={update} onClose={() => setSettingsOpen(false)} />
+      )}
       <WhatsNew />
     </div>
   );
