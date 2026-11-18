@@ -238,6 +238,54 @@ button.primary {
   padding-bottom: 6px;
 }
 
+/* Computer-key caption at the top of a key (desktop) */
+.hint {
+  pointer-events: none;
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: clamp(9px, 1.6vmin, 12px);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.key.white .hint {
+  top: 64%; /* below the black keys */
+}
+
+.key.black .hint {
+  color: #8d9099;
+}
+
+.key.pressed .hint,
+.key.black.mark-root .hint,
+.key.black.mark-tone .hint {
+  color: #15161a;
+}
+
+/* ---------- Desktop: mouse hover ---------- */
+
+@media (hover: hover) and (pointer: fine) {
+  .key {
+    cursor: pointer;
+  }
+
+  .key.white:not(.pressed):hover {
+    filter: brightness(0.94);
+  }
+
+  .key.black:not(.pressed):hover {
+    filter: brightness(1.6);
+  }
+
+  button:not(:disabled):hover {
+    filter: brightness(0.95);
+  }
+}
+
+
 .loading {
   position: absolute;
   top: 12px;
@@ -398,4 +446,23 @@ button.primary {
 .dialog ul {
   padding-left: 20px;
   margin-top: 4px;
+}
+
+/* ---------- Keyboard shortcuts ---------- */
+
+.shortcuts {
+  padding-left: 20px;
+  margin: 10px 0 0;
+  line-height: 1.7;
+}
+
+kbd {
+  font-family: inherit;
+  font-size: 0.85em;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--button);
+  color: var(--text);
 }

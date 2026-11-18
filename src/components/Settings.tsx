@@ -7,6 +7,8 @@ import Icon from './icons';
 
 interface Props {
   state: AppState;
+  /** Desktop browser: computer-keyboard options instead of vibration. */
+  desktop: boolean;
   onChange: (patch: Partial<AppState>) => void;
   onClose: () => void;
 }
@@ -23,7 +25,7 @@ function octaves(whiteKeys: number): string {
   return `${text} ${o === 1 ? 'Oktave' : 'Oktaven'}`;
 }
 
-export default function Settings({ state, onChange, onClose }: Props) {
+export default function Settings({ state, desktop, onChange, onClose }: Props) {
   const [notesOpen, setNotesOpen] = useState(false);
   return (
     <div className="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title">
@@ -68,12 +70,37 @@ export default function Settings({ state, onChange, onClose }: Props) {
           </div>
         </section>
 
-        <section>
-          <label className="toggle">
-            <input type="checkbox" checked={state.vibration} onChange={(e) => onChange({ vibration: e.target.checked })} />
-            <span>Vibration bei Tastendruck</span>
-          </label>
-        </section>
+        {desktop ? (
+          <section>
+            <h2>PC-Tastatur</h2>
+            <label className="toggle">
+              <input type="checkbox" checked={state.keyHints} onChange={(e) => onChange({ keyHints: e.target.checked })} />
+              <span>Tastenbelegung auf der Klaviatur anzeigen</span>
+            </label>
+            <ul className="muted small shortcuts">
+              <li>
+                <kbd>A</kbd> bis <kbd>Ä</kbd>: weiße Tasten ab dem ersten c, Reihe darüber (<kbd>W</kbd> <kbd>E</kbd>{' '}
+                <kbd>T</kbd> …): schwarze Tasten
+              </li>
+              <li>
+                <kbd>←</kbd> <kbd>→</kbd> oder Mausrad: Klaviatur verschieben
+              </li>
+              <li>
+                <kbd>Leertaste</kbd>: Sustain-Pedal
+              </li>
+              <li>
+                <kbd>1</kbd> bis <kbd>4</kbd>: Akkordtyp (im Akkordmodus)
+              </li>
+            </ul>
+          </section>
+        ) : (
+          <section>
+            <label className="toggle">
+              <input type="checkbox" checked={state.vibration} onChange={(e) => onChange({ vibration: e.target.checked })} />
+              <span>Vibration bei Tastendruck</span>
+            </label>
+          </section>
+        )}
 
         <section>
           <h2>Über die App</h2>

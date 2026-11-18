@@ -7,9 +7,12 @@ import RepeatButton from './components/RepeatButton';
 import Settings from './components/Settings';
 import {
   closeApp,
+  DESKTOP_QUERY,
   enterFullscreen,
   exitFullscreen,
+  isDesktop,
   isFullscreen,
+  keyboardLayout,
   lockOrientation,
   unlockOrientation,
   vibrate,
@@ -24,25 +27,28 @@ import {
   octaveKeys,
 } from './music/chords';
 import { clampLeftWhite, maxLeftWhite, rangeLabel, windowKeys } from './music/notes';
+import { chordTypeIndex, pcBase, pcHints, pcNote } from './music/pcKeys';
 import { AppState, loadState, portraitWhiteKeys, saveState } from './storage';
 
-function usePortrait(): boolean {
-  const query = '(orientation: portrait)';
-  const [portrait, setPortrait] = useState(() => window.matchMedia(query).matches);
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
   useEffect(() => {
     const mq = window.matchMedia(query);
-    const on = () => setPortrait(mq.matches);
+    const on = () => setMatches(mq.matches);
     mq.addEventListener('change', on);
     return () => mq.removeEventListener('change', on);
-  }, []);
-  return portrait;
+  }, [query]);
+  return matches;
 }
+
+/** Scroll distance (px) that shifts the keyboard by one step. */
+const WHEEL_STEP = 60;
 
 /** How long a chord sounds when it is replayed by switching the chord type. */
 const REPLAY_MS = 700;
 
 export default function App() {
-  const [state, setState] = useState<AppState>(loadState);
+  const [state, setState] = useState<AppState>(() => loadState(isDesktop()));
   const [pressed, setPressed] = useState<ReadonlySet<number>>(new Set());
   const [sustain, setSustainState] = useState(false);
   const [fullscreen, setFullscreen] = useState(isFullscreen);
@@ -53,7 +59,12 @@ export default function App() {
   /** Last chord played in chord mode (root), for highlighting and replay. */
   const [lastRoot, setLastRoot] = useState<number | null>(null);
   const chordsByRoot = useRef(new Map<number, number[]>());
-  const portrait = usePortrait();
+  const portrait = useMediaQuery('(orientation: portrait)');
+  const desktop = useMediaQuery(DESKTOP_QUERY);
+  const [layout, setLayout] = useState<ReadonlyMap<string, string>>();
+  /** Computer keys held down, with the note each one plays. */
+  const heldKeys = useRef(new Map<string, number>());
+  const wheel = useRef(0);
 
   const update = useCallback((patch: Partial<AppState>) => setState((s) => ({ ...s, ...patch })), []);
 
@@ -72,12 +83,18 @@ export default function App() {
     allNotesOff();
     setPressed(new Set());
     chordsByRoot.current.clear();
+    heldKeys.current.clear();
   }, [state.mode]);
+
+  useEffect(() => {
+    if (desktop) keyboardLayout().then(setLayout);
+  }, [desktop]);
   useEffect(() => {
     const onHide = () => {
       if (document.hidden) {
         allNotesOff();
         setPressed(new Set());
+        heldKeys.current.clear();
       }
     };
     document.addEventListener('visibilitychange', onHide);
@@ -174,6 +191,13 @@ export default function App() {
     return m;
   }, [chordMode, lastRoot, state.chordType, chordKeys]);
 
+  const base = pcBase(keys);
+  const limit = chordMode ? 12 : Infinity;
+  const hints = useMemo(
+    () => (desktop && state.keyHints ? pcHints(base, layout, limit) : undefined),
+    [desktop, state.keyHints, base, layout, limit],
+  );
+
   /* ---------- Top bar actions ---------- */
 
   const toggleSustain = () => {
@@ -204,12 +228,80 @@ export default function App() {
 
   const instrumentLabel = state.instrument === 'piano' ? 'Klavier' : 'Orgel';
 
+  /* ---------- Computer keyboard and mouse wheel ---------- */
+
+  // The listeners are registered once and call the handlers of the latest render
+  const latest = useRef({ handlePress, handleRelease, shift, toggleSustain, chooseChordType, base, limit, chordMode });
+  latest.current = { handlePress, handleRelease, shift, toggleSustain, chooseChordType, base, limit, chordMode };
+
+  useEffect(() => {
+    const releaseKeys = () => {
+      for (const midi of heldKeys.current.values()) latest.current.handleRelease(midi);
+      heldKeys.current.clear();
+    };
+    const onDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (document.querySelector('[role="dialog"]')) return; // settings or release notes open
+      const l = latest.current;
+      if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+        e.preventDefault();
+        l.shift(e.code === 'ArrowLeft' ? -1 : 1);
+        return;
+      }
+      if (e.code === 'Space') {
+        e.preventDefault(); // no page scroll, no click on a focused button
+        if (!e.repeat) l.toggleSustain();
+        return;
+      }
+      const type = chordTypeIndex(e.code);
+      if (type !== null && l.chordMode) {
+        e.preventDefault();
+        if (!e.repeat) l.chooseChordType(CHORD_TYPES[type].type);
+        return;
+      }
+      const midi = pcNote(e.code, l.base, l.limit);
+      if (midi === null) return;
+      e.preventDefault();
+      if (e.repeat || heldKeys.current.has(e.code)) return;
+      heldKeys.current.set(e.code, midi);
+      l.handlePress(midi);
+    };
+    const onUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space') e.preventDefault();
+      const midi = heldKeys.current.get(e.code);
+      if (midi === undefined) return;
+      heldKeys.current.delete(e.code);
+      latest.current.handleRelease(midi);
+    };
+    window.addEventListener('keydown', onDown);
+    window.addEventListener('keyup', onUp);
+    window.addEventListener('blur', releaseKeys);
+    return () => {
+      window.removeEventListener('keydown', onDown);
+      window.removeEventListener('keyup', onUp);
+      window.removeEventListener('blur', releaseKeys);
+    };
+  }, []);
+
+  const onWheel = (e: React.WheelEvent) => {
+    const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    const px = e.deltaMode === 1 ? d * 20 : d; // lines to pixels
+    wheel.current += px;
+    while (Math.abs(wheel.current) >= WHEEL_STEP) {
+      const dir = wheel.current > 0 ? 1 : -1;
+      wheel.current -= dir * WHEEL_STEP;
+      shift(dir);
+    }
+  };
+
   return (
-    <div className={`app ${portrait ? 'portrait' : 'landscape'}`}>
+    <div className={`app ${portrait ? 'portrait' : 'landscape'} ${desktop ? 'desktop' : ''}`}>
       <header className="bar">
-        <button className="icon-button" aria-label="App schließen" title="App schließen" onClick={close}>
-          <Icon name="close" />
-        </button>
+        {!desktop && (
+          <button className="icon-button" aria-label="App schließen" title="App schließen" onClick={close}>
+            <Icon name="close" />
+          </button>
+        )}
         <button
           className={`icon-button ${fullscreen ? 'active' : ''}`}
           aria-label="Vollbild"
@@ -219,19 +311,21 @@ export default function App() {
         >
           <Icon name={fullscreen ? 'fullscreenExit' : 'fullscreen'} />
         </button>
-        <button
-          className={`icon-button ${locked ? 'active' : ''}`}
-          aria-label="Drehsperre"
-          aria-pressed={locked}
-          title="Drehsperre"
-          onClick={toggleLock}
-        >
-          <Icon name={locked ? 'lock' : 'unlock'} />
-        </button>
+        {!desktop && (
+          <button
+            className={`icon-button ${locked ? 'active' : ''}`}
+            aria-label="Drehsperre"
+            aria-pressed={locked}
+            title="Drehsperre"
+            onClick={toggleLock}
+          >
+            <Icon name={locked ? 'lock' : 'unlock'} />
+          </button>
+        )}
         <button
           className={`text-button ${sustain ? 'active' : ''}`}
           aria-pressed={sustain}
-          title="Sustain-Pedal"
+          title={desktop ? 'Sustain-Pedal (Leertaste)' : 'Sustain-Pedal'}
           onClick={toggleSustain}
         >
           Pedal
@@ -270,15 +364,16 @@ export default function App() {
         </button>
       </header>
 
-      <main className="stage">
+      <main className="stage" onWheel={onWheel}>
         {chordMode && (
           <div className="chord-types" role="radiogroup" aria-label="Akkordtyp">
-            {CHORD_TYPES.map((c) => (
+            {CHORD_TYPES.map((c, i) => (
               <button
                 key={c.type}
                 role="radio"
                 aria-checked={state.chordType === c.type}
                 className={state.chordType === c.type ? 'active' : ''}
+                title={desktop ? `Taste ${i + 1}` : undefined}
                 onClick={() => chooseChordType(c.type)}
               >
                 {c.label}
@@ -291,6 +386,7 @@ export default function App() {
           labels={state.labels}
           pressed={pressed}
           marks={marks}
+          hints={hints}
           onPress={handlePress}
           onRelease={handleRelease}
         />
@@ -302,7 +398,7 @@ export default function App() {
           {toast}
         </div>
       )}
-      {settingsOpen && <Settings state={state} onChange={update} onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && <Settings state={state} desktop={desktop} onChange={update} onClose={() => setSettingsOpen(false)} />}
       <WhatsNew />
     </div>
   );

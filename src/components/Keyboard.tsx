@@ -11,6 +11,8 @@ interface Props {
   pressed: ReadonlySet<number>;
   /** Extra highlight (chord mode), by MIDI number. */
   marks?: ReadonlyMap<number, KeyMark>;
+  /** Computer-key captions by MIDI number (desktop). */
+  hints?: ReadonlyMap<number, string>;
   onPress: (midi: number) => void;
   onRelease: (midi: number) => void;
 }
@@ -21,7 +23,7 @@ const BLACK_WIDTH = 0.62; // relative to a white key
  * Piano keyboard with multitouch and glissando: every pointer plays the key under
  * it and, when it slides, releases the old key and plays the new one.
  */
-export default function Keyboard({ keys, labels, pressed, marks, onPress, onRelease }: Props) {
+export default function Keyboard({ keys, labels, pressed, marks, hints, onPress, onRelease }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const pointers = useRef(new Map<number, number | null>());
 
@@ -82,8 +84,10 @@ export default function Keyboard({ keys, labels, pressed, marks, onPress, onRele
           const whitesBefore = whites.filter((m) => m < midi).length;
           style = { left: `${(whitesBefore - BLACK_WIDTH / 2) * w}%`, width: `${w * BLACK_WIDTH}%` };
         }
+        const hint = hints?.get(midi);
         return (
           <div key={midi} className={cls} style={style} data-midi={midi}>
+            {hint && <span className="hint">{hint}</span>}
             {showsLabel(midi, labels) && <span className="label">{germanName(midi)}</span>}
           </div>
         );

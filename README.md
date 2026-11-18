@@ -1,6 +1,6 @@
 # Piano
 
-Einfache Klavier-App als PWA für Android-Handys. Installierbar, offline nutzbar, Oberfläche auf Deutsch.
+Einfache Klavier-App als PWA für Android-Handys und Desktop-Browser. Installierbar, offline nutzbar, Oberfläche auf Deutsch.
 
 ## Funktionen
 
@@ -12,6 +12,11 @@ Einfache Klavier-App als PWA für Android-Handys. Installierbar, offline nutzbar
 - Akkordmodus: Grundton aus einer Oktave, Typ Dur, Moll, vermindert, übermäßig (Grundstellung). Ein Typ ist immer gewählt (Start: Dur); ein Typwechsel spielt den letzten Akkord erneut. Die Pfeile wechseln hier die Oktave.
 - Vollbild, Drehsperre (nur im Vollbild), App schließen (je nach Gerät)
 - Einstellungen: Anzahl der Tasten, Beschriftung (keine / nur C / alle), Vibration, Version, Release Notes
+- Desktop-Browser (Maus/Trackpad, erkannt über `(hover: hover) and (pointer: fine)`):
+  - PC-Tastatur nach physischer Position: `A`–`Ä` (+ `#`) weiße Tasten ab dem ersten sichtbaren c, `W E T Z U O P +` schwarze; im Akkordmodus eine Oktave als Grundtöne
+  - `←`/`→` und Mausrad verschieben, Leertaste schaltet das Pedal, `1`–`4` wählen den Akkordtyp
+  - Tastenbelegung auf den Tasten (abschaltbar), Hover-Effekte, Standard drei Oktaven ab c
+  - Drehsperre, App schließen und Vibration ausgeblendet
 - Einstellungen und Position werden lokal gespeichert; Updates werden automatisch übernommen, danach erscheinen die Release Notes
 
 ## Entwicklung
